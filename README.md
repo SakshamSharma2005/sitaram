@@ -1,150 +1,163 @@
-# 🎓 Certificate Verification System
+# 🎓 AI-Powered Certificate Verification System
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![OCR](https://img.shields.io/badge/OCR-OCR.space-orange.svg)](https://ocr.space)
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.47+-red.svg)](https://streamlit.io)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.7+-orange.svg)](https://pytorch.org)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.12+-green.svg)](https://opencv.org)
 
-An intelligent certificate verification system that uses **OCR (Optical Character Recognition)** and **fuzzy matching algorithms** to automatically verify the authenticity of educational certificates against a database of legitimate records.
+An advanced certificate verification system that combines **OCR text extraction**, **database validation**, and **AI-powered seal verification** using Vision Transformer (ViT) models. This system can detect forged certificates by analyzing both textual content and institutional seals/stamps.
 
-## ✨ Key Features
+## 🚀 Key Features
 
-🔍 **Smart OCR Processing** - Extracts text from certificate images using OCR.space API  
-🧠 **Intelligent Field Extraction** - Uses database-guided matching to identify names, institutions, degrees, and years  
-📊 **Advanced Fuzzy Matching** - Multiple algorithms (RapidFuzz) for robust text comparison  
-⚡ **Real-time Verification** - Instant authentication with confidence scoring  
-🎮 **Demo Mode** - Test the system without requiring OCR API  
-📱 **Web Interface** - User-friendly Streamlit dashboard  
-📈 **Detailed Analytics** - Field-by-field comparison with reasoning  
-📄 **Export Reports** - Downloadable JSON verification reports  
+### 🔍 **Dual Verification System**
+- **OCR Text Verification**: Extracts and validates certificate text using OCR.space API
+- **AI Seal Verification**: Uses Vision Transformer to classify institutional seals as real or fake
+- **Database Cross-Reference**: Validates registration numbers against institutional records
+- **Combined Decision Logic**: Makes final authenticity decisions based on multiple verification steps
 
-## 🚀 Live Demo
+### 🤖 **Advanced AI Components**
+- **Vision Transformer (ViT)**: Fine-tuned `google/vit-base-patch16-224` model for seal classification
+- **Computer Vision**: OpenCV-based seal detection with multiple algorithms (HoughCircles, contour analysis)
+- **Deep Learning**: 100% validation accuracy on training dataset
+- **Real-time Processing**: Fast inference for instant verification results
 
-![Certificate Verification Demo](https://via.placeholder.com/800x400/2E86AB/FFFFFF?text=Certificate+Verification+System+Demo)
+### 🎯 **Web Interface**
+- **Streamlit Dashboard**: User-friendly web interface
+- **Real-time Results**: Live verification with progress indicators
+- **Visual Feedback**: Step-by-step verification process display
+- **Seal Visualization**: Shows detected and cropped seal regions
 
-Try the system with our sample certificates or upload your own!
+## 📋 System Architecture
+
+```
+Certificate Image → OCR Extraction → Database Verification
+                                         ↓
+     ← Final Decision ← AI Classification ← Seal Detection
+├── train_vit_seal_model.py     # ViT model training script
+├── generate_seal_dataset.py    # Seal dataset generation
+├── test_complete_system.py     # Complete system testing
+├── test_sample.py              # Test suite with sample data
+├── requirements.txt            # Python dependencies (includes AI libraries)
+├── README.md                   # This file
+├── .env                        # Environment variables (create this)
+├── certs.db                    # SQLite database (created by init_db.py)
+├── vit_seal_checker.pth        # Trained ViT model (created by training)
+├── vit_model_info.json         # Model performance info
+├── seal_dataset/               # AI training dataset
+│   ├── train/
+│   │   ├── real/              # Authentic seals (30 images)
+│   │   └── fake/              # Fake seals (30 images)
+│   └── val/
+│       ├── real/              # Validation real seals (10 images)
+│       └── fake/              # Validation fake seals (10 images)
+├── cropped_seals/              # Detected seal regions
+└── sample_certificates/        # Sample certificate images
+```eamlit that uses OCR to extract text from certificate images, AI-powered seal verification, and verifies them against a local database.
+
+## 🎯 Features
+
+### Core Verification
+- **Streamlit Web Interface**: User-friendly interface for certificate upload and verification
+- **OCR Integration**: Uses OCR.space API for text extraction from certificate images
+- **Database Verification**: Compares extracted data against a local SQLite database
+- **Fuzzy Matching**: Intelligent field comparison with configurable similarity thresholds
+- **Confidence Scoring**: Multi-factor confidence scoring with weighted field comparison
+
+### AI-Powered Seal Verification
+- **Seal Detection**: Automatic detection of seals, stamps, and signatures using computer vision
+- **Vision Transformer (ViT)**: Pre-trained AI model fine-tuned for seal authenticity classification
+- **Multi-Method Detection**: Uses circular detection, contour analysis, and template matching
+- **Real vs Fake Classification**: Classifies detected seals as authentic or tampered/fake
+- **Confidence Analysis**: Provides confidence scores for individual and combined seal results
+
+### User Experience
+- **Visual Feedback**: Clear verification results with step-by-step analysis
+- **Report Generation**: Downloadable JSON verification reports with OCR and seal results
+- **Demo Mode**: Test both OCR and seal verification without API calls
+- **Detected Seal Display**: Shows cropped seal images with classification results
+- **Final Decision Logic**: Combines OCR and seal verification for overall authenticity decision
 
 ## 🚀 Quick Start
 
-### 1️⃣ Clone the Repository
+### 1. Installation
 
 ```bash
-git clone https://github.com/SakshamSharma2005/certificatesdetection.git
-cd certificatesdetection
-```
+# Clone or download the project files
+cd certificate-verification
 
-### 2️⃣ Install Dependencies
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3️⃣ Get OCR API Key (Free)
-
-1. Visit [OCR.space](https://ocr.space/ocrapi) 
-2. Sign up for a **free account** (25,000 requests/month)
-3. Copy your API key
-
-### 4️⃣ Configure Environment
+### 2. Environment Setup
 
 Create a `.env` file in the project root:
 
 ```bash
+# Get your free API key from https://ocr.space/ocrapi
 OCRSPACE_API_KEY=your_api_key_here
 ```
 
-### 5️⃣ Initialize Database
+### 3. Initialize Database
 
 ```bash
 python init_db.py
 ```
 
-This creates `certs.db` with 10 sample certificate records.
+This creates `certs.db` with sample certificate records.
 
-### 6️⃣ Launch the Application
+### 4. Set Up AI Seal Verification (Optional)
+
+Generate seal dataset and train the ViT model:
+
+```bash
+# Generate dummy seal dataset aligned with certificate database
+python generate_seal_dataset.py
+
+# Train Vision Transformer model for seal classification
+python train_vit_seal_model.py
+```
+
+This creates:
+- `seal_dataset/` folder with training and validation images
+- `vit_seal_checker.pth` - trained ViT model for seal verification
+- `vit_model_info.json` - model performance information
+
+### 5. Run the Application
 
 ```bash
 streamlit run main.py
 ```
 
-🌐 **Open your browser**: http://localhost:8501
+### 6. Test Complete System
 
-### 7️⃣ Test with Sample Certificates
+```bash
+# Test all components together
+python test_complete_system.py
+```
 
-Upload any certificate from the `sample_certificates/` folder or try the **Demo Mode** for instant results!
+The web interface will open in your browser at `http://localhost:8501`
 
-## 📱 How to Use
+### 5. Test the System
 
-1. **Upload Certificate**: Choose JPG/PNG/PDF certificate image
-2. **Configure Settings**: Select language, enable bounding boxes
-3. **Choose Mode**: Real OCR or Demo Mode for testing
-4. **Click Verify**: Watch the magic happen!
-5. **Review Results**: See authentication decision and detailed analysis
-6. **Download Report**: Get JSON verification report
+```bash
+python test_sample.py
+```
 
 ## 📁 Project Structure
 
 ```
-certificatesdetection/
-├── 📱 main.py                    # Streamlit web interface
-├── 🔍 ocr_client.py              # OCR.space API client  
-├── 🧠 verifier.py                # Certificate verification engine
-├── 🗄️ init_db.py                 # Database initialization
-├── 🎨 generate_certificates.py   # Sample certificate generator
-├── 🧪 test_sample.py             # Test suite
-├── 🔧 test_ocr_api.py            # API key validator
-├── 📋 requirements.txt           # Python dependencies
-├── 🗃️ certs.db                  # SQLite database (auto-created)
-├── 📁 sample_certificates/       # Generated test certificates
-│   ├── ABC2023001_Saksham_Sharma.jpg
-│   ├── ABC2022007_Prisha_Verma.jpg
-│   └── ... (8 more certificates)
-├── 📝 README.md                 # This documentation
-└── ⚙️ .env                      # Environment config (create this)
+certificate-verification/
+├── main.py              # Streamlit web interface
+├── ocr_client.py        # OCR.space API client
+├── verifier.py          # Certificate verification engine
+├── init_db.py           # Database initialization script
+├── test_sample.py       # Test suite with sample data
+├── requirements.txt     # Python dependencies
+├── README.md           # This file
+├── .env                # Environment variables (create this)
+└── certs.db            # SQLite database (created by init_db.py)
 ```
-
-## 🎯 Sample Database
-
-The system includes **10 pre-loaded certificate records** for testing:
-
-| Registration | Student Name | Institution | Degree | Year |
-|-------------|--------------|-------------|--------|------|
-| `ABC2023001` | Saksham Sharma | DevLabs Institute | B.Tech Computer Engg | 2023 |
-| `ABC2022007` | Prisha Verma | Global Tech University | M.Tech AI | 2022 |
-| `UNI10009` | Rajeev Kumar | Northfield University | B.Sc Physics | 2019 |
-| `INSTX-555` | Anita Desai | Sunrise Polytechnic | Diploma Civil | 2021 |
-| `COLL-7788` | John Doe | WestEnd College | BBA | 2020 |
-| *...and 5 more* | | | | |
-
-## 🔬 How It Works
-
-### 1. OCR Text Extraction
-```python
-# Upload certificate image → OCR.space API → Extract text + bounding boxes
-ocr_result = ocr_client.extract_text_from_bytes(image_bytes)
-```
-
-### 2. Smart Field Extraction  
-```python
-# Use database as guide to intelligently extract fields
-extracted_fields = verifier.extract_fields_from_ocr(ocr_text, db_record)
-```
-
-### 3. Fuzzy Matching & Scoring
-```python
-# Compare extracted vs database using multiple algorithms
-scores = {
-    'name': fuzz.token_sort_ratio(db_name, ocr_name),
-    'institution': fuzz.partial_ratio(db_inst, ocr_inst),
-    'degree': keyword_matching(db_degree, ocr_degree),
-    'year': year_tolerance_matching(db_year, ocr_year)
-}
-```
-
-### 4. Decision Making
-- **AUTHENTIC** (75%+ confidence): High probability legitimate certificate
-- **SUSPECT** (40-74% confidence): Requires manual review  
-- **NOT FOUND** (<40% confidence): Likely fraudulent or not in database
 
 ## 🔧 Configuration
 
@@ -187,6 +200,30 @@ scores = {
 - Retrieves canonical certificate record
 
 ### 4. Field Comparison
+- **Name Matching**: Advanced fuzzy matching with multiple algorithms
+- **Institution Verification**: Exact and fuzzy matching with institution database
+- **Degree Validation**: Flexible matching to handle degree variations
+- **Year Verification**: Range checking with tolerance for OCR errors
+
+### 5. Seal Verification (AI-Powered)
+- **Seal Detection**: OpenCV-based detection using multiple methods:
+  - Circular detection (HoughCircles)
+  - Contour analysis for stamp shapes
+  - Template matching (if templates available)
+- **Image Preprocessing**: Crop detected seal regions with padding
+- **ViT Classification**: Vision Transformer model classifies each seal:
+  - Real: Authentic institutional seals/stamps
+  - Fake: Tampered, forged, or suspicious seals
+- **Confidence Scoring**: Individual and combined confidence metrics
+- **Multi-Seal Handling**: Processes multiple seals per certificate
+
+### 6. Final Decision Logic
+- **Step 1**: OCR text verification (Pass/Fail)
+- **Step 2**: Seal verification (Pass/Fail)
+- **Final Result**: 
+  - ✅ **AUTHENTIC**: Both OCR and Seal verification pass
+  - ❌ **FAKE**: Either OCR or Seal verification fails
+- **Confidence**: Combined confidence from both verification steps
 - **Name**: Fuzzy string matching using RapidFuzz
 - **Institution**: Partial ratio matching (handles abbreviations)
 - **Degree**: Partial matching (handles formatting differences)
@@ -215,8 +252,45 @@ The system gracefully handles:
 - **Database Errors**: Missing database, connection issues
 - **Invalid Input**: Unsupported file formats, corrupted images
 - **API Limits**: Rate limiting, quota exceeded
+- **Seal Detection Failures**: No seals detected, corrupted images
+- **ViT Model Errors**: Model loading failures, prediction errors
+- **AI Dependencies**: Missing PyTorch, transformers, or OpenCV
 
-## 🔄 Extending the System
+## 🤖 AI Model Information
+
+### Vision Transformer (ViT) Details
+- **Base Model**: google/vit-base-patch16-224 (pre-trained on ImageNet)
+- **Fine-tuning**: Custom 2-class classification (Real vs Fake seals)
+- **Input Size**: 224x224 RGB images
+- **Training Dataset**: 80 images (60 training, 20 validation)
+- **Performance**: 100% validation accuracy on dummy dataset
+- **Model Size**: ~346MB download + fine-tuned weights
+
+### Seal Detection Algorithms
+- **Circular Detection**: HoughCircles for round seals/stamps
+- **Contour Analysis**: Shape-based detection for irregular stamps
+- **Template Matching**: Custom template comparison (if templates provided)
+- **Confidence Thresholds**: Configurable detection sensitivity
+
+## � Troubleshooting
+
+### OCR Issues
+- **E301 Errors**: Try Demo Mode or check image quality
+- **API Limits**: Free tier allows 25K requests/month
+- **Image Quality**: Use high-contrast, well-lit, straight-aligned images
+
+### Seal Verification Issues
+- **Model Not Found**: Run `python train_vit_seal_model.py` to train the model
+- **No Seals Detected**: Check image quality, try different detection parameters
+- **Poor Classification**: Retrain model with better dataset or more images
+- **Memory Errors**: ViT model requires ~2GB RAM, reduce batch size if needed
+
+### Dependencies
+- **PyTorch Installation**: Use CPU version if no GPU: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu`
+- **OpenCV Issues**: Try `pip install opencv-python-headless` for server environments
+- **Transformers**: Requires internet for first-time model download
+
+## �🔄 Extending the System
 
 ### Adding Bounding Box Visualization
 
@@ -285,141 +359,43 @@ The system gracefully handles:
        return result
    ```
 
-## 🎮 Demo Mode
+## 🐛 Troubleshooting
 
-**Don't have an OCR API key?** No problem! Enable **Demo Mode** to test the verification system immediately:
+### Common Issues
 
-1. Check "Use Demo Mode" in the sidebar
-2. Upload any image (content doesn't matter)
-3. Watch the verification process with simulated OCR data
-4. See real fuzzy matching and confidence scoring in action
+1. **"OCR API Key not found"**
+   - Create `.env` file with `OCRSPACE_API_KEY=your_key`
+   - Get free key from https://ocr.space/ocrapi
 
-## 🛠️ Advanced Configuration
+2. **"Database not found"**
+   - Run `python init_db.py` to create the database
 
-### Custom Thresholds
-```python
-# In verifier.py - adjust these values
-self.authentic_threshold = 0.75    # AUTHENTIC decision
-self.suspect_threshold = 0.40      # SUSPECT vs NOT_FOUND
-```
+3. **"No text extracted"**
+   - Check image quality and format
+   - Try different OCR language settings
+   - Ensure certificate text is clearly visible
 
-### Field Weights  
-```python
-# Customize importance of each field
-self.field_weights = {
-    'name': 0.4,        # 40% - Most important
-    'institution': 0.3,  # 30% - Very important  
-    'degree': 0.2,      # 20% - Moderately important
-    'year': 0.1         # 10% - Least important
-}
-```
+4. **"Low confidence scores"**
+   - Verify sample data matches your certificate format
+   - Adjust field weights in `verifier.py`
+   - Check regex patterns for registration numbers
 
-### Adding New Certificates
-```python
-# Add to database
-python init_db.py  # or manually insert into certs.db
-```
+### Debug Mode
 
-## 🔧 API Testing
-
-Test your OCR.space API key:
+Set environment variable for verbose logging:
 ```bash
-python test_ocr_api.py
+export DEBUG=1  # Linux/Mac
+set DEBUG=1     # Windows
 ```
 
-Run system tests:
-```bash
-python test_sample.py
-```
+## 📝 License
 
-Generate new sample certificates:
-```bash
-python generate_certificates.py
-```
-
-## 🚨 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| 🔑 **"OCR API Key not found"** | Create `.env` file with `OCRSPACE_API_KEY=your_key` |
-| 🗄️ **"Database not found"** | Run `python init_db.py` |
-| 📸 **"OCR failed: E301"** | Try smaller images (<1MB), JPG format, or enable Demo Mode |
-| 📊 **"Low confidence scores"** | Use generated sample certificates for better results |
-| 🌐 **"Connection errors"** | Check internet connection and API key validity |
-
-**💡 Pro Tip:** Use the generated certificates in `sample_certificates/` folder for best OCR results!
-
-## � Deployment Options
-
-### Local Development
-```bash
-streamlit run main.py
-```
-
-### Docker (Optional)
-```dockerfile
-FROM python:3.9-slim
-COPY . /app
-WORKDIR /app
-RUN pip install -r requirements.txt
-EXPOSE 8501
-CMD ["streamlit", "run", "main.py"]
-```
-
-### Cloud Deployment
-- **Streamlit Cloud**: Connect your GitHub repo
-- **Heroku**: Use the included `requirements.txt`
-- **AWS/GCP**: Deploy as containerized application
+This project is provided as-is for educational and prototype purposes. Please ensure you have appropriate licenses for OCR services and comply with data privacy regulations when handling certificate data.
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
-
-1. **🍴 Fork** the repository
-2. **🌟 Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **💻 Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **📤 Push** to the branch (`git push origin feature/amazing-feature`)
-5. **🔄 Open** a Pull Request
-
-### Ideas for Contributions:
-- 🎨 **UI/UX improvements** for the Streamlit interface
-- 🧠 **Better OCR preprocessing** (noise removal, image correction)
-- 📊 **Additional matching algorithms** (semantic similarity, ML-based)
-- 🌐 **Multi-language support** for international certificates
-- 🔐 **Security enhancements** (input validation, rate limiting)
-- 📱 **Mobile-responsive design**
-- 🎯 **Batch processing** for multiple certificates
-
-## 📞 Support & Community
-
-- 📧 **Issues**: [GitHub Issues](https://github.com/SakshamSharma2005/certificatesdetection/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/SakshamSharma2005/certificatesdetection/discussions)
-- 📖 **Wiki**: [Project Wiki](https://github.com/SakshamSharma2005/certificatesdetection/wiki)
-
-## 📊 Project Stats
-
-![GitHub stars](https://img.shields.io/github/stars/SakshamSharma2005/certificatesdetection)
-![GitHub forks](https://img.shields.io/github/forks/SakshamSharma2005/certificatesdetection)
-![GitHub issues](https://img.shields.io/github/issues/SakshamSharma2005/certificatesdetection)
-![GitHub last commit](https://img.shields.io/github/last-commit/SakshamSharma2005/certificatesdetection)
-
-## 📜 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **OCR.space** for providing free OCR API
-- **Streamlit** for the amazing web app framework
-- **RapidFuzz** for fast fuzzy string matching
-- **Pillow** for image processing capabilities
-
-## ⭐ Star This Project
-
-If you found this project helpful, please give it a ⭐ star on GitHub! It helps others discover the project.
+Feel free to submit issues, feature requests, or pull requests to improve the system!
 
 ---
 
-**🎓 Built for educational verification, powered by AI and OCR technology.**
-
-**Made with ❤️ by [Saksham Sharma](https://github.com/SakshamSharma2005)**
+**Note**: This is a prototype system. For production use, implement additional security measures, user authentication, audit logging, and robust error handling.
