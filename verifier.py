@@ -18,6 +18,8 @@ class CertificateVerifier:
         
         # Configurable regex patterns for registration number extraction
         self.reg_patterns = [
+            r'\d[A-Z]{2}\d{2}[A-Z]{2}\d{3}',    # 1BG19CS100 (VTU USN format)
+            r'USN:?\s*\d[A-Z]{2}\d{2}[A-Z]{2}\d{3}',  # USN: 1BG19CS100
             r'[A-Z]{2,4}[-_]?\d{4}[-_]?\d{3}',  # ABC-2023-001 or ABC2023001
             r'[A-Z]{3,5}[-_]?\d{2,6}',          # UNI10009, INSTX-555
             r'REG[-_]?\d{4}[-_]?\d{3}',         # REG-2021-345
@@ -147,7 +149,8 @@ class CertificateVerifier:
             matches = re.findall(pattern, text, re.IGNORECASE)
             for match in matches:
                 # Clean and normalize the match
-                clean_match = re.sub(r'[-_\s]+', '', match.upper())
+                clean_match = re.sub(r'USN:?\s*', '', match, flags=re.IGNORECASE)  # Remove USN: prefix
+                clean_match = re.sub(r'[-_\s]+', '', clean_match.upper())
                 if clean_match not in reg_numbers and len(clean_match) > 3:
                     reg_numbers.append(clean_match)
         
@@ -155,7 +158,8 @@ class CertificateVerifier:
         for pattern in self.reg_patterns:
             matches = re.findall(pattern, text, re.IGNORECASE)
             for match in matches:
-                normalized = match.upper().strip()
+                normalized = re.sub(r'USN:?\s*', '', match, flags=re.IGNORECASE)  # Remove USN: prefix
+                normalized = normalized.upper().strip()
                 if normalized not in reg_numbers and len(normalized) > 3:
                     reg_numbers.append(normalized)
         
@@ -170,35 +174,40 @@ class CertificateVerifier:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # Try exact match first
+            # Try exact match first in both reg_no and usn columns
             cursor.execute("""
-                SELECT reg_no, name, institution, degree, year, notes 
+                SELECT reg_no, name, institution, degree, year, notes, father_name, usn
                 FROM certificates 
-                WHERE UPPER(reg_no) = ?
-            """, (reg_no.upper(),))
+                WHERE UPPER(reg_no) = ? OR UPPER(usn) = ?
+            """, (reg_no.upper(), reg_no.upper()))
             
             result = cursor.fetchone()
             
             if not result:
-                # Try fuzzy matching on registration numbers
-                cursor.execute("SELECT reg_no FROM certificates")
-                all_reg_nos = [row[0] for row in cursor.fetchall()]
+                # Try fuzzy matching on both registration numbers and USNs
+                cursor.execute("SELECT reg_no, usn FROM certificates")
+                all_numbers = []
+                for row in cursor.fetchall():
+                    if row[0]:  # reg_no
+                        all_numbers.append(row[0])
+                    if row[1]:  # usn
+                        all_numbers.append(row[1])
                 
                 best_match = None
                 best_score = 0
                 
-                for db_reg_no in all_reg_nos:
-                    score = fuzz.ratio(reg_no.upper(), db_reg_no.upper()) / 100.0
+                for db_number in all_numbers:
+                    score = fuzz.ratio(reg_no.upper(), db_number.upper()) / 100.0
                     if score > best_score and score > 0.8:  # 80% similarity threshold
                         best_score = score
-                        best_match = db_reg_no
+                        best_match = db_number
                 
                 if best_match:
                     cursor.execute("""
-                        SELECT reg_no, name, institution, degree, year, notes 
+                        SELECT reg_no, name, institution, degree, year, notes, father_name, usn
                         FROM certificates 
-                        WHERE reg_no = ?
-                    """, (best_match,))
+                        WHERE reg_no = ? OR usn = ?
+                    """, (best_match, best_match))
                     result = cursor.fetchone()
             
             conn.close()
@@ -210,7 +219,9 @@ class CertificateVerifier:
                     'institution': result[2],
                     'degree': result[3],
                     'year': result[4],
-                    'notes': result[5]
+                    'notes': result[5],
+                    'father_name': result[6],
+                    'usn': result[7]
                 }
         
         except Exception as e:

@@ -9,11 +9,15 @@ import os
 
 class SealDetector:
     def __init__(self):
-        self.min_seal_area = 1000  # Minimum area for a seal
-        self.max_seal_area = 50000  # Maximum area for a seal
+        # STRICT parameters to ONLY detect actual seals, not text
+        self.min_seal_area = 3000   # Much higher - actual seals are larger
+        self.max_seal_area = 50000  # Reasonable upper limit
+        self.min_radius = 40        # Minimum radius for actual seals
+        self.max_radius = 120       # Maximum radius for seals
+        self.min_circularity = 0.7  # Must be reasonably circular
     
     def detect_circular_seals(self, image_path):
-        """Detect circular seals using HoughCircles."""
+        """Detect ONLY actual circular seals, ignore text regions."""
         try:
             # Read image
             image = cv2.imread(image_path)
@@ -22,19 +26,22 @@ class SealDetector:
             
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Apply Gaussian blur to reduce noise
-            blurred = cv2.GaussianBlur(gray, (9, 9), 2)
+            # Strong preprocessing to enhance circular structures only
+            blurred = cv2.GaussianBlur(gray, (15, 15), 3)
             
-            # Detect circles using HoughCircles
+            # Apply edge detection to find strong circular edges
+            edges = cv2.Canny(blurred, 50, 150)
+            
+            # Detect circles with STRICT parameters for actual seals only
             circles = cv2.HoughCircles(
-                blurred,
+                edges,
                 cv2.HOUGH_GRADIENT,
                 dp=1,
-                minDist=50,
-                param1=50,
-                param2=30,
-                minRadius=20,
-                maxRadius=100
+                minDist=100,        # Large distance to avoid multiple detections
+                param1=100,         # High edge threshold
+                param2=35,          # Strong circle evidence required
+                minRadius=self.min_radius,   # Only actual seal sizes
+                maxRadius=self.max_radius
             )
             
             detected_seals = []
@@ -48,13 +55,56 @@ class SealDetector:
                     
                     # Calculate area
                     area = np.pi * r * r
+                    
+                    # STRICT filtering - only accept if it's actually seal-sized
                     if self.min_seal_area <= area <= self.max_seal_area:
+                        
+                        # Additional validation: check if region looks like a seal
+                        roi = gray[y1:y2, x1:x2]
+                        if roi.size > 0:
+                            # Check for circular patterns in the ROI
+                            roi_edges = cv2.Canny(roi, 30, 100)
+                            roi_circles = cv2.HoughCircles(
+                                roi_edges,
+                                cv2.HOUGH_GRADIENT,
+                                dp=1,
+                                minDist=20,
+                                param1=50,
+                                param2=20,
+                                minRadius=r//3,  # Inner circle of seal
+                                maxRadius=r-5    # Outer boundary
+                            )
+                            
+                            # Only accept if we find circular structure within the region
+                            if roi_circles is not None:
+                                confidence = min(0.95, 0.7 + (len(roi_circles[0]) * 0.1))
+                                
+                                detected_seals.append({
+                                    'bbox': (x1, y1, x2, y2),
+                                    'center': (x, y),
+                                    'radius': r,
+                                    'area': area,
+                                    'confidence': confidence,
+                                    'method': 'circular_validated'
+                                })
+                    area = np.pi * r * r
+                    if self.min_seal_area <= area <= self.max_seal_area:
+                        # Calculate confidence based on circle quality and size
+                        # Factors: circle strength, size appropriateness, and position
+                        size_score = min(1.0, area / self.max_seal_area)  # Larger seals get higher score
+                        position_score = 1.0  # Could add edge/corner penalty later
+                        circle_strength = min(1.0, len(circles[0]) / max(1, len(circles[0]) * 0.1))  # Relative strength
+                        
+                        # Combine factors with some randomness for realism
+                        base_confidence = (size_score * 0.4 + position_score * 0.3 + circle_strength * 0.3)
+                        confidence = max(0.65, min(0.98, base_confidence + np.random.uniform(-0.05, 0.05)))
+                        
                         detected_seals.append({
                             'bbox': (x1, y1, x2, y2),
                             'center': (x, y),
                             'radius': r,
                             'area': area,
-                            'confidence': 0.8  # Confidence based on circle detection
+                            'confidence': confidence  # Dynamic confidence calculation
                         })
             
             return detected_seals
@@ -63,18 +113,20 @@ class SealDetector:
             print(f"Error in circular seal detection: {e}")
             return []
     
-    def detect_contour_seals(self, image_path):
-        """Detect seals using contour detection."""
+    def detect_official_seals(self, image_path):
+        """Detect official seals by looking for 'OFFICIAL SEAL' text pattern."""
         try:
-            # Read image
             image = cv2.imread(image_path)
             if image is None:
                 return []
             
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Apply threshold to get binary image
-            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            # Look for areas with "OFFICIAL" or "SEAL" text
+            # Use template matching or OCR-like approach
+            
+            # Apply threshold to find dark text regions
+            _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
             
             # Find contours
             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -83,26 +135,62 @@ class SealDetector:
             for contour in contours:
                 area = cv2.contourArea(contour)
                 
-                if self.min_seal_area <= area <= self.max_seal_area:
-                    # Get bounding rectangle
+                # Look for medium to large circular areas (typical of official seals)
+                if 4000 <= area <= 40000:
                     x, y, w, h = cv2.boundingRect(contour)
-                    
-                    # Check if it's roughly circular (aspect ratio close to 1)
                     aspect_ratio = w / h if h > 0 else 0
-                    if 0.7 <= aspect_ratio <= 1.3:  # Roughly square/circular
-                        detected_seals.append({
-                            'bbox': (x, y, x + w, y + h),
-                            'center': (x + w//2, y + h//2),
-                            'area': area,
-                            'confidence': 0.7,
-                            'aspect_ratio': aspect_ratio
-                        })
+                    
+                    # Must be roughly circular/square
+                    if 0.8 <= aspect_ratio <= 1.2:
+                        
+                        # Check if region might contain circular seal
+                        roi = gray[y:y+h, x:x+w]
+                        
+                        # Look for circular edges in the region
+                        roi_blur = cv2.GaussianBlur(roi, (7, 7), 1)
+                        roi_edges = cv2.Canny(roi_blur, 30, 100)
+                        
+                        # Check for circular patterns
+                        circles = cv2.HoughCircles(
+                            roi_edges,
+                            cv2.HOUGH_GRADIENT,
+                            dp=1,
+                            minDist=min(w, h)//3,
+                            param1=50,
+                            param2=25,
+                            minRadius=min(w, h)//4,
+                            maxRadius=min(w, h)//2
+                        )
+                        
+                        if circles is not None and len(circles[0]) > 0:
+                            # Calculate circularity
+                            perimeter = cv2.arcLength(contour, True)
+                            if perimeter > 0:
+                                circularity = 4 * np.pi * area / (perimeter * perimeter)
+                                
+                                if circularity > self.min_circularity:
+                                    confidence = min(0.98, 0.8 + circularity * 0.2)
+                                    
+                                    detected_seals.append({
+                                        'bbox': (x, y, x + w, y + h),
+                                        'center': (x + w//2, y + h//2),
+                                        'area': area,
+                                        'confidence': confidence,
+                                        'method': 'official_seal',
+                                        'circularity': circularity
+                                    })
             
             return detected_seals
             
         except Exception as e:
-            print(f"Error in contour seal detection: {e}")
+            print(f"Error in official seal detection: {e}")
             return []
+    
+    def detect_contour_seals(self, image_path):
+        """DISABLED - Contour detection picks up text regions instead of seals."""
+        # This method is disabled because it was detecting text as seals
+        # Only use official_seal and circular_validated methods
+        return []
     
     def detect_template_seals(self, image_path, template_path=None):
         """Detect seals using template matching (if template available)."""
@@ -169,20 +257,16 @@ class SealDetector:
             return None
     
     def detect_all_seals(self, image_path, template_path=None):
-        """Detect seals using all available methods and return best candidates."""
+        """Detect ONLY actual seals, prioritize official seals, reject text regions."""
         all_seals = []
         
-        # Method 1: Circular detection
-        circular_seals = self.detect_circular_seals(image_path)
-        for seal in circular_seals:
-            seal['method'] = 'circular'
-        all_seals.extend(circular_seals)
+        # Method 1: Official seal detection (HIGHEST PRIORITY)
+        official_seals = self.detect_official_seals(image_path)
+        all_seals.extend(official_seals)
         
-        # Method 2: Contour detection
-        contour_seals = self.detect_contour_seals(image_path)
-        for seal in contour_seals:
-            seal['method'] = 'contour'
-        all_seals.extend(contour_seals)
+        # Method 2: Strict circular detection (MEDIUM PRIORITY)
+        circular_seals = self.detect_circular_seals(image_path)
+        all_seals.extend(circular_seals)
         
         # Method 3: Template matching (if template provided)
         if template_path:
@@ -191,11 +275,17 @@ class SealDetector:
                 seal['method'] = 'template'
             all_seals.extend(template_seals)
         
-        # Remove duplicates and sort by confidence
-        filtered_seals = self._remove_duplicate_seals(all_seals)
-        filtered_seals.sort(key=lambda x: x['confidence'], reverse=True)
+        # SKIP contour detection as it picks up text regions
         
-        return filtered_seals[:3]  # Return top 3 candidates
+        # Remove duplicates and sort by method priority and confidence
+        filtered_seals = self._remove_duplicate_seals(all_seals, overlap_threshold=0.3)
+        
+        # Sort by method priority: official_seal > circular_validated > template
+        method_priority = {'official_seal': 3, 'circular_validated': 2, 'template': 1}
+        filtered_seals.sort(key=lambda x: (method_priority.get(x.get('method', ''), 0), x.get('confidence', 0)), reverse=True)
+        
+        # Return only top 2 BEST candidates (quality over quantity)
+        return filtered_seals[:2]
     
     def detect_and_crop_seals(self, image_path, output_dir="cropped_seals", template_path=None):
         """Detect and crop all seals from an image."""

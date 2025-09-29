@@ -36,7 +36,7 @@ def init_database():
         ('COLL-7788', 'John Doe', 'WestEnd College', 'BBA', 2020, 'Sample placeholder'),
         ('CERT-9001', 'Maya Iyer', 'Metro University', 'MSc Maths', 2018, 'Sample student'),
         ('REG-2021-345', 'Ram Singh', 'City College', 'BCom', 2021, 'Sample student'),
-        ('EDU-3333', 'Nina Gupta', 'Coastal Institute', 'BCA', 2024, 'Sample student'),
+        ('EDU-3333', 'Nina Gupta', 'Coastal Institute', 'BCA', 2025, 'Sample student'),
         ('COL-1212', 'Alex Wong', 'Global Tech University', 'B.Tech ECE', 2022, 'Sample student'),
         ('STU-0007', 'Liu Chen', 'International Academy', 'PhD Chemistry', 2020, 'Sample student')
     ]

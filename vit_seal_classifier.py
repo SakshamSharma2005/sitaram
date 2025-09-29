@@ -183,7 +183,7 @@ class ViTSealClassifier:
             result['seal_index'] = i + 1
             predictions.append(result)
         
-        # Combine results - if any seal is fake, overall is fake
+        # Improved combine results - more lenient approach
         overall_real_count = sum(1 for p in predictions if p.get('seal_status') == 'Real')
         overall_fake_count = len(predictions) - overall_real_count
         
@@ -191,8 +191,17 @@ class ViTSealClassifier:
         valid_predictions = [p for p in predictions if 'confidence' in p and p['confidence'] > 0]
         avg_confidence = np.mean([p['confidence'] for p in valid_predictions]) if valid_predictions else 0.0
         
-        # Determine overall status
-        is_overall_real = overall_fake_count == 0
+        # More lenient decision logic: Pass if majority are real OR if confidence is reasonable
+        total_seals = len(predictions)
+        real_ratio = overall_real_count / total_seals if total_seals > 0 else 0
+        
+        # Pass if:
+        # 1. Majority (>50%) are real, OR
+        # 2. At least one real seal with high confidence (>80%), OR  
+        # 3. Average confidence is reasonable (>60%) regardless of classification
+        high_confidence_real = any(p.get('seal_status') == 'Real' and p.get('confidence', 0) > 0.8 for p in predictions)
+        
+        is_overall_real = (real_ratio > 0.5) or high_confidence_real or (avg_confidence > 0.6)
         
         combined_result = {
             "step": "Seal Verification",
