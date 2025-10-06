@@ -19,7 +19,13 @@ def download_vit_model():
     try:
         # Hugging Face model URL - use resolve instead of blob for direct download
         default_url = "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/vit_seal_checker.pth"
-        model_url = os.getenv("VIT_MODEL_URL", default_url)
+        
+        # Try Streamlit secrets first, then environment variable
+        try:
+            import streamlit as st
+            model_url = st.secrets.get("VIT_MODEL_URL", default_url)
+        except:
+            model_url = os.getenv("VIT_MODEL_URL", default_url)
         
         if not model_url:
             logger.warning("VIT_MODEL_URL not set in secrets - using demo mode")

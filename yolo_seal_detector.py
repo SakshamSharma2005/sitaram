@@ -60,7 +60,12 @@ class YOLOSealDetector:
                 
                 # Get model URL from environment or use default
                 default_url = "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
-                model_url = os.getenv("YOLO_MODEL_URL", default_url)
+                
+                # Try Streamlit secrets first, then environment variable  
+                try:
+                    model_url = st.secrets.get("YOLO_MODEL_URL", default_url)
+                except:
+                    model_url = os.getenv("YOLO_MODEL_URL", default_url)
                 
                 st.info(f"📥 Downloading YOLOv8 model from Hugging Face...")
                 st.write("This is a one-time download (6 MB). Future runs will use the cached model.")
@@ -425,7 +430,10 @@ def check_yolo_integration():
     # Check if model exists locally or can be downloaded from Hugging Face
     if not os.path.exists(model_path):
         # Check if we have the download URL configured
-        model_url = os.getenv("YOLO_MODEL_URL", None)
+        try:
+            model_url = st.secrets.get("YOLO_MODEL_URL", None)
+        except:
+            model_url = os.getenv("YOLO_MODEL_URL", None)
         
         if model_url:
             st.info("📥 YOLOv8 model will be downloaded from Hugging Face on first use (6 MB)")
