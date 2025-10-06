@@ -32,10 +32,21 @@ class ViTSealClassifier:
         if self.is_loaded:
             return True
         
+        # Try to download model if not present
         if not os.path.exists(self.model_path):
-            print(f"❌ Model file not found: {self.model_path}")
-            print("Please run train_vit_seal_model.py first to train the model.")
-            return False
+            try:
+                from model_downloader import download_vit_model
+                downloaded_path = download_vit_model()
+                if downloaded_path:
+                    self.model_path = downloaded_path
+                else:
+                    print(f"❌ Model file not found: {self.model_path}")
+                    print("Please run train_vit_seal_model.py first to train the model.")
+                    return False
+            except ImportError:
+                print(f"❌ Model file not found: {self.model_path}")
+                print("Please run train_vit_seal_model.py first to train the model.")
+                return False
         
         try:
             # Try to load pretrained ViT

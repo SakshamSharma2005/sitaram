@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: certificate-verifier
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run main.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: OCR_API_KEY
+        sync: false
