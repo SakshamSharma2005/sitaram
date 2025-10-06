@@ -71,6 +71,8 @@ Thumbs.db
 vit_seal_checker.pth
 *.pkl
 *.joblib
+*.pt
+yolo_seal_model/*.pt
 
 # Datasets (too large for GitHub)
 complete_certificates/
