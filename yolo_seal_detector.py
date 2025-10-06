@@ -421,9 +421,19 @@ def check_yolo_integration():
         return False
     
     model_path = 'yolo_seal_model/best.pt'
+    
+    # Check if model exists locally or can be downloaded from Hugging Face
     if not os.path.exists(model_path):
-        st.warning(f"⚠️ YOLOv8 model not found at: {model_path}")
-        st.info("Please download the trained model from Kaggle and place it in the yolo_seal_model/ directory.")
-        return False
+        # Check if we have the download URL configured
+        model_url = os.getenv("YOLO_MODEL_URL", None)
+        
+        if model_url:
+            st.info("📥 YOLOv8 model will be downloaded from Hugging Face on first use (6 MB)")
+            return True
+        else:
+            st.warning(f"⚠️ YOLOv8 model not found at: {model_path}")
+            st.info("💡 **Option 1**: Model will auto-download from Hugging Face on first use")
+            st.info("💡 **Option 2**: Download from Kaggle and place in yolo_seal_model/ directory")
+            return True  # Still return True - will download on first use
     
     return True
