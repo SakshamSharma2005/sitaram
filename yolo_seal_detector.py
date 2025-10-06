@@ -52,10 +52,52 @@ class YOLOSealDetector:
         if self.is_loaded or st.session_state.yolo_model_loaded:
             return True
         
+        # Download model from Hugging Face if not present locally
         if not os.path.exists(self.model_path):
-            st.error(f"❌ Model file not found: {self.model_path}")
-            st.info("Please download the trained model from Kaggle and place it in the yolo_seal_model/ directory.")
-            return False
+            try:
+                import requests
+                from pathlib import Path
+                
+                # Get model URL from environment or use default
+                default_url = "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
+                model_url = os.getenv("YOLO_MODEL_URL", default_url)
+                
+                st.info(f"📥 Downloading YOLOv8 model from Hugging Face...")
+                st.write("This is a one-time download (6 MB). Future runs will use the cached model.")
+                
+                # Create directory if needed
+                Path(self.model_path).parent.mkdir(parents=True, exist_ok=True)
+                
+                # Download with progress
+                response = requests.get(model_url, stream=True)
+                response.raise_for_status()
+                
+                total_size = int(response.headers.get('content-length', 0))
+                
+                with open(self.model_path, 'wb') as f:
+                    if total_size == 0:
+                        f.write(response.content)
+                    else:
+                        downloaded = 0
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                                downloaded += len(chunk)
+                
+                st.success(f"✅ Model downloaded successfully!")
+                
+            except Exception as e:
+                st.error(f"❌ Failed to download YOLO model: {e}")
+                st.info("💡 Falling back to YOLOv8 default model...")
+                # Use default YOLOv8 model as fallback
+                try:
+                    self.model = YOLO('yolov8n.pt')  # Nano model
+                    self.is_loaded = True
+                    st.session_state.yolo_model_loaded = True
+                    st.warning("⚠️ Using YOLOv8 default model (not trained on seals)")
+                    return True
+                except:
+                    return False
         
         try:
             with st.spinner("🔄 Loading YOLOv8 seal detection model..."):
@@ -63,7 +105,7 @@ class YOLOSealDetector:
                 self.is_loaded = True
                 st.session_state.yolo_model_loaded = True
                 
-            st.success(f"✅ YOLOv8 model loaded successfully! (Classes: {self.class_names})")
+            st.success(f"✅ YOLOv8 custom model loaded successfully! (Classes: {self.class_names})")
             return True
             
         except Exception as e:
