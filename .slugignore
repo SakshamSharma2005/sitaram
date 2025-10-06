@@ -1,0 +1,24 @@
+# Files to ignore during Streamlit Cloud deployment
+# These are large files that aren't needed for the app to run
+
+# Large model files (we download from Hugging Face instead)
+vit_seal_checker.pth
+yolo_seal_model/best.pt
+
+# Training datasets
+complete_certificates/
+test_certificates/
+seal_dataset/
+cropped_seals/
+
+# Cache and temporary files
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+*.log
+
+# Development files
+.vscode/
+.idea/
+.git/lfs/

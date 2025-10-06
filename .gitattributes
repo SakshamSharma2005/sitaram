@@ -1,3 +1,5 @@
+# Git LFS tracking (optional - models downloaded from Hugging Face)
+# These files are tracked but not required for deployment
 *.pth filter=lfs diff=lfs merge=lfs -text
 *.pt filter=lfs diff=lfs merge=lfs -text
 *.pkl filter=lfs diff=lfs merge=lfs -text
