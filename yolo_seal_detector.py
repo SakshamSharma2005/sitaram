@@ -48,9 +48,23 @@ class YOLOSealDetector:
         if not YOLO_AVAILABLE:
             st.error("❌ YOLOv8 not available. Please install: pip install ultralytics")
             return False
-            
-        if self.is_loaded or st.session_state.yolo_model_loaded:
+        
+        # Check if model is already loaded AND model object exists
+        if self.is_loaded and self.model is not None:
             return True
+        
+        # Check session state and reload if needed
+        if st.session_state.yolo_model_loaded and self.model is None:
+            # Model was loaded before but object is lost, reload it
+            if os.path.exists(self.model_path):
+                try:
+                    self.model = YOLO(self.model_path)
+                    self.is_loaded = True
+                    return True
+                except Exception as e:
+                    st.error(f"❌ Error reloading YOLO model: {e}")
+                    st.session_state.yolo_model_loaded = False
+                    self.is_loaded = False
         
         # Download model from Hugging Face if not present locally
         if not os.path.exists(self.model_path):
