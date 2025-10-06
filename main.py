@@ -396,10 +396,23 @@ def main():
             enable_seal_verification = st.checkbox("Enable Seal Verification", value=True, help="Detect and verify seals/stamps using AI")
             
             if enable_seal_verification:
-                # Check if ViT model exists
+                # Check if ViT model exists OR if we have HuggingFace URL configured
                 model_exists = os.path.exists('vit_seal_checker.pth') and VIT_AVAILABLE
+                
+                # Check if we can download from HuggingFace
+                can_download = False
+                try:
+                    vit_url = st.secrets.get("VIT_MODEL_URL", None)
+                    if vit_url:
+                        can_download = True
+                except:
+                    pass
+                
                 if model_exists:
-                    st.success("✅ ViT model ready")
+                    st.success("✅ ViT model ready (local)")
+                    seal_demo_mode = st.checkbox("Seal Demo Mode", value=False, help="Use demo predictions instead of trained model")
+                elif can_download and VIT_AVAILABLE:
+                    st.info("📥 ViT model will download from Hugging Face on first use")
                     seal_demo_mode = st.checkbox("Seal Demo Mode", value=False, help="Use demo predictions instead of trained model")
                 else:
                     st.warning("⚠️ ViT model not available")
