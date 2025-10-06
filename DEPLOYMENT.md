@@ -1,47 +1,78 @@
-# Certificate Verification System - Deployment Guide
+# 🎓 Certificate Verification System - Streamlit Cloud Deployment
 
-## 🚀 Deploy to Streamlit Cloud (FREE)
+A comprehensive AI-powered certificate verification system using OCR, YOLOv8 seal detection, and Vision Transformer classification.
 
-### Step 1: Push to GitHub
-1. Make sure your repository is pushed to GitHub
-2. Repository: `SakshamSharma2005/sitaram`
+## 🚀 Features
 
-### Step 2: Deploy on Streamlit Cloud
-1. Go to [share.streamlit.io](https://share.streamlit.io)
-2. Sign in with your GitHub account
-3. Click "New app"
-4. Select:
-   - Repository: `SakshamSharma2005/sitaram`
-   - Branch: `main`
+- **OCR Text Verification**: Extract and verify certificate text against database
+- **AI Seal Detection**: YOLOv8-based seal/stamp detection (99% accuracy)
+- **Seal Authentication**: Vision Transformer (ViT) classifier for real/fake seal detection
+- **Multi-layer Security**: Combines OCR + AI for comprehensive verification
+- **Demo Mode**: Test without API keys
+
+## 📦 Deployment on Streamlit Cloud
+
+### Quick Deploy
+
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Prepare for Streamlit Cloud deployment"
+   git push origin main
+   ```
+
+2. **Deploy on Streamlit Cloud**:
+   - Go to [share.streamlit.io](https://share.streamlit.io)
+   - Sign in with GitHub
+   - Click "New app"
+   - Select your repository: `SakshamSharma2005/sitaram`
    - Main file path: `main.py`
-5. Click "Deploy"!
+   - Click "Deploy"
 
-### Step 3: Add Secrets (Optional)
-If you have an OCR API key, add it in Streamlit Cloud:
-1. Go to your app settings
-2. Click "Secrets"
-3. Add:
-```toml
-OCRSPACE_API_KEY = "your-api-key-here"
-```
+3. **Add Secrets** (Optional - for OCR):
+   - In Streamlit Cloud dashboard, go to App Settings > Secrets
+   - Add:
+     ```toml
+     OCRSPACE_API_KEY = "your_api_key_here"
+     ```
 
-### Step 4: Your App is Live! 🎉
-Your app will be available at: `https://your-app-name.streamlit.app`
+## 🎮 Demo Mode
 
-## Features
-- 🔍 OCR-based certificate verification
-- 🎯 YOLOv8 seal detection (99% accuracy)
-- 🤖 AI-powered seal classification
-- 🎮 Demo mode (works without API keys)
-- 📊 Comprehensive verification reports
+The app works **without any API keys** using demo mode:
+- Sample certificates included for testing
+- All AI models work offline
+- Perfect for demonstrations
 
-## Local Development
+## 🛠️ Local Development
+
 ```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Run locally
 streamlit run main.py
 ```
 
-## Note
-- The app works in **demo mode** without any API keys
-- For production use, configure OCR API key in secrets
-- Database initialization: `python init_db.py`
+## 📊 Tech Stack
+
+- **Framework**: Streamlit
+- **OCR**: OCR.space API
+- **Seal Detection**: YOLOv8 (Ultralytics)
+- **Classification**: Vision Transformer (ViT)
+- **Database**: SQLite
+- **CV Processing**: OpenCV
+
+## 🔐 Security
+
+- Multi-factor verification (OCR + AI seals)
+- High-confidence rejection for fake seals
+- Database cross-validation
+- Secure API handling
+
+## 📝 License
+
+MIT License
+
+## 👨‍💻 Author
+
+Saksham Sharma

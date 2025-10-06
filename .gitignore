@@ -86,3 +86,6 @@ temp_*
 # API Keys
 api_keys.py
 config.py
+
+# Streamlit secrets (local only)
+.streamlit/secrets.toml
