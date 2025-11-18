@@ -28,24 +28,31 @@ class ViTSealClassifier:
         ])
     
     def load_model(self):
-        """Load the trained ViT model."""
+        """Load the trained ViT model from Hugging Face or local."""
         if self.is_loaded:
             return True
         
-        # Try to download model if not present
+        # Download from Hugging Face if not present locally
         if not os.path.exists(self.model_path):
             try:
-                from model_downloader import download_vit_model
-                downloaded_path = download_vit_model()
-                if downloaded_path:
-                    self.model_path = downloaded_path
-                else:
-                    print(f"❌ Model file not found: {self.model_path}")
-                    print("Please run train_vit_seal_model.py first to train the model.")
-                    return False
-            except ImportError:
-                print(f"❌ Model file not found: {self.model_path}")
-                print("Please run train_vit_seal_model.py first to train the model.")
+                import requests
+                print("📥 Downloading ViT model from Hugging Face...")
+                
+                hf_url = "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/vit_seal_checker.pth"
+                
+                response = requests.get(hf_url, stream=True)
+                response.raise_for_status()
+                
+                # Save model file
+                with open(self.model_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                
+                print(f"✅ ViT model downloaded successfully to {self.model_path}")
+                
+            except Exception as e:
+                print(f"❌ Failed to download ViT model from Hugging Face: {e}")
                 return False
         
         try:

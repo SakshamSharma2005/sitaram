@@ -61,32 +61,42 @@ async def startup_event():
         logger.error("Components unavailable")
         return
     
+    # Check if we should skip heavy model loading (for free tier with limited RAM)
+    skip_models = os.getenv("SKIP_MODEL_LOADING", "false").lower() == "true"
+    
     try:
-        logger.info("🔄 Loading models at startup...")
+        logger.info("🔄 Initializing API components...")
         
-        # Load YOLO detector
-        yolo_detector = YOLOSealDetector()
-        # Explicitly load the model
-        if hasattr(yolo_detector, 'load_model'):
-            yolo_detector.load_model()
-        logger.info("✅ YOLOv8 loaded and ready")
+        if skip_models:
+            logger.warning("⚠️ Skipping AI model loading (SKIP_MODEL_LOADING=true)")
+            logger.info("API will run with OCR and database verification only")
+            yolo_detector = None
+            vit_classifier = None
+        else:
+            # Load YOLO detector from Hugging Face
+            logger.info("📥 Loading YOLO model from Hugging Face...")
+            yolo_detector = YOLOSealDetector()
+            if hasattr(yolo_detector, 'load_model'):
+                yolo_detector.load_model()
+            logger.info("✅ YOLOv8 loaded and ready")
+            
+            # Load ViT classifier from Hugging Face
+            logger.info("📥 Loading ViT model from Hugging Face...")
+            vit_classifier = ViTSealClassifier()
+            if hasattr(vit_classifier, 'load_model'):
+                vit_classifier.load_model()
+            logger.info("✅ ViT classifier loaded and ready")
         
-        # Load ViT classifier
-        vit_classifier = ViTSealClassifier()
-        if hasattr(vit_classifier, 'load_model'):
-            vit_classifier.load_model()
-        logger.info("✅ ViT classifier loaded and ready")
-        
-        # Initialize OCR client
+        # Initialize OCR client (lightweight)
         ocr_client = OCRClient()
         logger.info("✅ OCR client initialized")
         
-        # Initialize database verifier
+        # Initialize database verifier (lightweight)
         verifier = CertificateVerifier()
         logger.info("✅ Database verifier initialized")
         
         MODELS_LOADED = True
-        logger.info("🚀 All models loaded! API is ready for requests!")
+        logger.info("🚀 API ready for requests!")
         
     except Exception as e:
         logger.error(f"❌ Model loading failed: {e}")

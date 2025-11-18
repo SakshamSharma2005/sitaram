@@ -2,17 +2,21 @@
 # This file configures the API service deployment
 
 services:
-  # FastAPI Backend Service
+  # FastAPI Backend Service - Models loaded from Hugging Face
   - type: web
     name: certificate-verification-api
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m uvicorn api:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: python -m uvicorn api:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.18
       - key: OCRSPACE_API_KEY
         sync: false  # Set this in Render dashboard
+      - key: SKIP_MODEL_LOADING
+        value: "false"  # Set to true if you want OCR-only mode
+      - key: YOLO_MODEL_URL
+        value: "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
     healthCheckPath: /health

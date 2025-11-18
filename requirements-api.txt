@@ -1,0 +1,23 @@
+# Render Free Tier Optimization
+# Use CPU-only PyTorch and optimized loading
+
+# Install minimal dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Core API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Essentials only
+requests>=2.31.0
+python-dotenv>=1.0.0
+pillow>=10.0.0
+numpy>=1.24.0
+opencv-python-headless>=4.8.0
+
+# Database
+rapidfuzz>=3.0.0
+python-Levenshtein>=0.20.0

@@ -104,11 +104,43 @@ class YOLOSealDetector:
         except:
             pass  # Not in Streamlit mode
         
-        # Check if model file exists
+        # Download from Hugging Face if not present locally
         if not os.path.exists(self.model_path):
-            print(f"❌ Model file not found: {self.model_path}")
-            print("💡 Make sure Git LFS downloaded the model file")
-            return False
+            try:
+                import requests
+                from pathlib import Path
+                
+                print("📥 Downloading YOLO model from Hugging Face...")
+                
+                # Try to get model URL from environment or use default
+                hf_url = os.getenv(
+                    "YOLO_MODEL_URL",
+                    "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
+                )
+                
+                # Create directory if needed
+                Path(self.model_path).parent.mkdir(parents=True, exist_ok=True)
+                
+                response = requests.get(hf_url, stream=True)
+                response.raise_for_status()
+                
+                # Save model file
+                with open(self.model_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                
+                print(f"✅ YOLO model downloaded successfully to {self.model_path}")
+                
+            except Exception as e:
+                print(f"❌ Failed to download YOLO model from Hugging Face: {e}")
+                print("💡 Using YOLOv8 default model as fallback...")
+                try:
+                    self.model = YOLO('yolov8n.pt')
+                    self.is_loaded = True
+                    return True
+                except:
+                    return False
         
         # Load the model
         try:
