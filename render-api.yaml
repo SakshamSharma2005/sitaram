@@ -1,0 +1,18 @@
+# API Deployment Configuration for Render
+# This file configures the API service deployment
+
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: certificate-verification-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: OCRSPACE_API_KEY
+        sync: false  # Set this in Render dashboard
+    healthCheckPath: /health
