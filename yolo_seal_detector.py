@@ -112,7 +112,7 @@ class YOLOSealDetector:
                 
                 print("📥 Downloading YOLO model from Hugging Face...")
                 
-                # Try to get model URL from environment or use default
+                # Download YOLO model from Hugging Face
                 hf_url = os.getenv(
                     "YOLO_MODEL_URL",
                     "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
