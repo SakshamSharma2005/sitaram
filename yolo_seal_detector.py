@@ -8,8 +8,39 @@ import cv2
 import numpy as np
 import os
 import time
+import warnings
 from PIL import Image
-import streamlit as st
+
+# Suppress Streamlit warnings when running in API mode
+warnings.filterwarnings('ignore', message='.*ScriptRunContext.*')
+warnings.filterwarnings('ignore', message='.*enableCORS.*')
+warnings.filterwarnings('ignore', message='.*enableXsrfProtection.*')
+
+# Try to import streamlit, but make it optional
+try:
+    import streamlit as st
+    STREAMLIT_AVAILABLE = True
+except ImportError:
+    STREAMLIT_AVAILABLE = False
+    # Create dummy st object for API mode
+    class DummySt:
+        class session_state:
+            yolo_model_loaded = False
+        @staticmethod
+        def error(msg): print(f"ERROR: {msg}")
+        @staticmethod
+        def success(msg): print(f"SUCCESS: {msg}")
+        @staticmethod
+        def warning(msg): print(f"WARNING: {msg}")
+        @staticmethod
+        def info(msg): print(f"INFO: {msg}")
+        @staticmethod
+        def spinner(msg): 
+            class Spinner:
+                def __enter__(self): return self
+                def __exit__(self, *args): pass
+            return Spinner()
+    st = DummySt()
 
 # Handle imports with fallback for local development
 try:
@@ -39,9 +70,13 @@ class YOLOSealDetector:
         self.is_loaded = False
         self.class_names = ['fake', 'true']  # Model classes
         
-        # Streamlit session state for caching
-        if 'yolo_model_loaded' not in st.session_state:
-            st.session_state.yolo_model_loaded = False
+        # Session state for caching (works in both Streamlit and API mode)
+        try:
+            if 'yolo_model_loaded' not in st.session_state:
+                st.session_state.yolo_model_loaded = False
+        except:
+            # API mode - use class variable
+            self._model_loaded_flag = False
     
     def load_model(self):
         """Load the trained YOLOv8 model with Streamlit caching."""
