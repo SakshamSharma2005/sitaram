@@ -79,91 +79,54 @@ class YOLOSealDetector:
             self._model_loaded_flag = False
     
     def load_model(self):
-        """Load the trained YOLOv8 model with Streamlit caching."""
+        """Load the trained YOLOv8 model."""
         if not YOLO_AVAILABLE:
-            st.error("❌ YOLOv8 not available. Please install: pip install ultralytics")
+            print("❌ YOLOv8 not available. Please install: pip install ultralytics")
             return False
         
         # Check if model is already loaded AND model object exists
         if self.is_loaded and self.model is not None:
             return True
         
-        # Check session state and reload if needed
-        if st.session_state.yolo_model_loaded and self.model is None:
-            # Model was loaded before but object is lost, reload it
-            if os.path.exists(self.model_path):
-                try:
-                    self.model = YOLO(self.model_path)
-                    self.is_loaded = True
-                    return True
-                except Exception as e:
-                    st.error(f"❌ Error reloading YOLO model: {e}")
-                    st.session_state.yolo_model_loaded = False
-                    self.is_loaded = False
-        
-        # Download model from Hugging Face if not present locally
-        if not os.path.exists(self.model_path):
-            try:
-                import requests
-                from pathlib import Path
-                
-                # Get model URL from environment or use default
-                default_url = "https://huggingface.co/Saksham-Sharma2005/vit-seal-classifier/resolve/main/best.pt"
-                
-                # Try Streamlit secrets first, then environment variable  
-                try:
-                    model_url = st.secrets.get("YOLO_MODEL_URL", default_url)
-                except:
-                    model_url = os.getenv("YOLO_MODEL_URL", default_url)
-                
-                st.info(f"📥 Downloading YOLOv8 model from Hugging Face...")
-                st.write("This is a one-time download (6 MB). Future runs will use the cached model.")
-                
-                # Create directory if needed
-                Path(self.model_path).parent.mkdir(parents=True, exist_ok=True)
-                
-                # Download with progress
-                response = requests.get(model_url, stream=True)
-                response.raise_for_status()
-                
-                total_size = int(response.headers.get('content-length', 0))
-                
-                with open(self.model_path, 'wb') as f:
-                    if total_size == 0:
-                        f.write(response.content)
-                    else:
-                        downloaded = 0
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if chunk:
-                                f.write(chunk)
-                                downloaded += len(chunk)
-                
-                st.success(f"✅ Model downloaded successfully!")
-                
-            except Exception as e:
-                st.error(f"❌ Failed to download YOLO model: {e}")
-                st.info("💡 Falling back to YOLOv8 default model...")
-                # Use default YOLOv8 model as fallback
-                try:
-                    self.model = YOLO('yolov8n.pt')  # Nano model
-                    self.is_loaded = True
-                    st.session_state.yolo_model_loaded = True
-                    st.warning("⚠️ Using YOLOv8 default model (not trained on seals)")
-                    return True
-                except:
-                    return False
-        
+        # Check session state and reload if needed (Streamlit mode)
         try:
-            with st.spinner("🔄 Loading YOLOv8 seal detection model..."):
-                self.model = YOLO(self.model_path)
-                self.is_loaded = True
+            if st.session_state.yolo_model_loaded and self.model is None:
+                # Model was loaded before but object is lost, reload it
+                if os.path.exists(self.model_path):
+                    try:
+                        self.model = YOLO(self.model_path)
+                        self.is_loaded = True
+                        return True
+                    except Exception as e:
+                        print(f"❌ Error reloading YOLO model: {e}")
+                        st.session_state.yolo_model_loaded = False
+                        self.is_loaded = False
+        except:
+            pass  # Not in Streamlit mode
+        
+        # Check if model file exists
+        if not os.path.exists(self.model_path):
+            print(f"❌ Model file not found: {self.model_path}")
+            print("💡 Make sure Git LFS downloaded the model file")
+            return False
+        
+        # Load the model
+        try:
+            print(f"🔄 Loading YOLOv8 model from {self.model_path}...")
+            self.model = YOLO(self.model_path)
+            self.is_loaded = True
+            
+            # Update session state if in Streamlit mode
+            try:
                 st.session_state.yolo_model_loaded = True
+            except:
+                pass
                 
-            st.success(f"✅ YOLOv8 custom model loaded successfully! (Classes: {self.class_names})")
+            print(f"✅ YOLOv8 model loaded successfully! (Classes: {self.class_names})")
             return True
             
         except Exception as e:
-            st.error(f"❌ Error loading YOLOv8 model: {e}")
+            print(f"❌ Error loading YOLOv8 model: {e}")
             return False
     
     def detect_circular_seals(self, image_path, confidence_threshold=0.5):

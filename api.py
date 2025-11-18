@@ -62,25 +62,36 @@ async def startup_event():
         return
     
     try:
-        logger.info("🔄 Loading models...")
+        logger.info("🔄 Loading models at startup...")
         
+        # Load YOLO detector
         yolo_detector = YOLOSealDetector()
-        logger.info("✅ YOLOv8 loaded")
+        # Explicitly load the model
+        if hasattr(yolo_detector, 'load_model'):
+            yolo_detector.load_model()
+        logger.info("✅ YOLOv8 loaded and ready")
         
+        # Load ViT classifier
         vit_classifier = ViTSealClassifier()
-        logger.info("✅ ViT loaded")
+        if hasattr(vit_classifier, 'load_model'):
+            vit_classifier.load_model()
+        logger.info("✅ ViT classifier loaded and ready")
         
+        # Initialize OCR client
         ocr_client = OCRClient()
-        logger.info("✅ OCR ready")
+        logger.info("✅ OCR client initialized")
         
+        # Initialize database verifier
         verifier = CertificateVerifier()
-        logger.info("✅ Verifier ready")
+        logger.info("✅ Database verifier initialized")
         
         MODELS_LOADED = True
-        logger.info("🚀 API ready!")
+        logger.info("🚀 All models loaded! API is ready for requests!")
         
     except Exception as e:
-        logger.error(f"❌ Load failed: {e}")
+        logger.error(f"❌ Model loading failed: {e}")
+        import traceback
+        traceback.print_exc()
         MODELS_LOADED = False
 
 @app.get("/")
